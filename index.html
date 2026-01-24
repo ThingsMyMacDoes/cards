@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Image Viewer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      background: black;
+      overflow: hidden;
+      font-family: system-ui, sans-serif;
+      cursor: none;
+    }
+
+    #viewer {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #image {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    /* UI elements (hidden by default) */
+    .ui {
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+
+    .ui.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
+      border: none;
+      font-size: 2.5rem;
+      padding: 0.75rem 1.25rem;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    #prev { left: 10px; }
+    #next { right: 10px; }
+
+    #counter {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      color: white;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+
+    #fullscreen {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="viewer">
+    <button id="prev" class="nav ui">❮</button>
+    <img id="image" alt="Image Viewer">
+    <button id="next" class="nav ui">❯</button>
+
+    <div id="counter" class="ui"></div>
+    <button id="fullscreen" class="ui">Fullscreen (F)</button>
+  </div>
+
+  <script>
+    // ===== CONFIG =====
+    const IMAGE_COUNT = 60;          // total number of images
+    const IMAGE_PATH = "images/";    // folder path
+    const IMAGE_PREFIX = "IMG_";     // filename prefix
+    const IMAGE_EXT = ".jpg";        // file extension
+    const PAD_LENGTH = 4;            // IMG_0001
+    const UI_HIDE_DELAY = 2000;      // ms before UI hides
+    // ==================
+
+    // Generate image list
+    const images = [];
+    for (let i = 1; i <= IMAGE_COUNT; i++) {
+      const num = String(i).padStart(PAD_LENGTH, "0");
+      images.push(`${IMAGE_PATH}${IMAGE_PREFIX}${num}${IMAGE_EXT}`);
+    }
+
+    let index = 0;
+    let uiTimeout;
+
+    const img = document.getElementById("image");
+    const counter = document.getElementById("counter");
+    const viewer = document.getElementById("viewer");
+    const uiElements = document.querySelectorAll(".ui");
+
+    function showImage(i) {
+      if (i < 0) i = images.length - 1;
+      if (i >= images.length) i = 0;
+
+      index = i;
+      img.src = images[index];
+      counter.textContent = `${index + 1} / ${images.length}`;
+    }
+
+    function showUI() {
+      uiElements.forEach(el => el.classList.add("visible"));
+      document.body.style.cursor = "default";
+
+      clearTimeout(uiTimeout);
+      uiTimeout = setTimeout(hideUI, UI_HIDE_DELAY);
+    }
+
+    function hideUI() {
+      uiElements.forEach(el => el.classList.remove("visible"));
+      document.body.style.cursor = "none";
+    }
+
+    // Button navigation
+    document.getElementById("prev").onclick = () => showImage(index - 1);
+    document.getElementById("next").onclick = () => showImage(index + 1);
+
+    // Keyboard navigation
+    document.addEventListener("keydown", e => {
+      showUI();
+      if (e.key === "ArrowLeft") showImage(index - 1);
+      if (e.key === "ArrowRight") showImage(index + 1);
+      if (e.key.toLowerCase() === "f") toggleFullscreen();
+    });
+
+    // Mouse movement shows UI
+    document.addEventListener("mousemove", showUI);
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        viewer.requestFullscreen();
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    document.getElementById("fullscreen").onclick = toggleFullscreen;
+
+    // Initial state
+    showImage(index);
+    hideUI();
+  </script>
+</body>
+</html>
