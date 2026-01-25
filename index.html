@@ -1,5 +1,6 @@
  
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,6 +16,7 @@
       background: black;
       overflow: hidden;
       font-family: system-ui, sans-serif;
+      color: white;
       cursor: none;
     }
 
@@ -23,19 +25,41 @@
       width: 100vw;
       height: 100vh;
       display: flex;
-      align-items: center;      /* vertical centering */
-      justify-content: center;  /* horizontal centering */
+      align-items: center;
+      justify-content: center;
     }
 
-    /* IMAGE: 80% OF SCREEN */
+    /* ===== CONTENT COLUMN ===== */
+    #content {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start; /* left-align text with image */
+      width: fit-content;
+      max-width: 100%;
+      height: 100%;
+      justify-content: center;
+    }
+
+    /* IMAGE */
     #image {
-      max-height: 80vh;   /* key rule */
+      max-height: 80vh;
       max-width: 80vw;
       object-fit: contain;
       display: block;
     }
 
-    /* UI elements (hidden by default) */
+    /* TEXT AREA (space below image) */
+    #caption-area {
+      height: calc(100vh - 80vh);
+      display: flex;
+      align-items: center; /* vertical centering */
+      text-align: left;
+      font-size: 1rem;
+      line-height: 1.4;
+      opacity: 0.9;
+    }
+
+    /* UI elements */
     .ui {
       opacity: 0;
       transition: opacity 0.3s ease;
@@ -67,7 +91,6 @@
       position: absolute;
       bottom: 12px;
       right: 12px;
-      color: white;
       background: rgba(0, 0, 0, 0.6);
       padding: 6px 10px;
       border-radius: 4px;
@@ -90,7 +113,12 @@
 <body>
   <div id="viewer">
     <button id="prev" class="nav ui">❮</button>
-    <img id="image" alt="Image Viewer">
+
+    <div id="content">
+      <img id="image" alt="Image Viewer">
+      <div id="caption-area"></div>
+    </div>
+
     <button id="next" class="nav ui">❯</button>
 
     <div id="counter" class="ui"></div>
@@ -103,37 +131,52 @@
     const IMAGE_PATH = "";
     const IMAGE_PREFIX = "IMG_";
     const IMAGE_EXT = ".jpg";
+    const TEXT_EXT = ".txt";
     const PAD_LENGTH = 4;
     const UI_HIDE_DELAY = 2000;
     // ==================
 
     const images = [];
+    const texts = [];
+
     for (let i = 1; i <= IMAGE_COUNT; i++) {
       const num = String(i).padStart(PAD_LENGTH, "0");
       images.push(`${IMAGE_PATH}${IMAGE_PREFIX}${num}${IMAGE_EXT}`);
+      texts.push(`${IMAGE_PATH}${IMAGE_PREFIX}${num}${TEXT_EXT}`);
     }
 
     let index = 0;
     let uiTimeout;
 
     const img = document.getElementById("image");
+    const caption = document.getElementById("caption-area");
     const counter = document.getElementById("counter");
     const viewer = document.getElementById("viewer");
     const uiElements = document.querySelectorAll(".ui");
 
-    function showImage(i) {
+    async function loadText(path) {
+      try {
+        const res = await fetch(path);
+        if (!res.ok) throw new Error();
+        return await res.text();
+      } catch {
+        return "";
+      }
+    }
+
+    async function showImage(i) {
       if (i < 0) i = images.length - 1;
       if (i >= images.length) i = 0;
 
       index = i;
       img.src = images[index];
       counter.textContent = `${index + 1} / ${images.length}`;
+      caption.textContent = await loadText(texts[index]);
     }
 
     function showUI() {
       uiElements.forEach(el => el.classList.add("visible"));
       document.body.style.cursor = "default";
-
       clearTimeout(uiTimeout);
       uiTimeout = setTimeout(hideUI, UI_HIDE_DELAY);
     }
