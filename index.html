@@ -1,93 +1,175 @@
+Image centered no text
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Image Viewer</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <title>Image Viewer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
-html, body {
-  margin: 0;
-  width: 100%;
-  height: 100%;
-  background: black;
-  overflow: hidden;
-  font-family: system-ui, sans-serif;
-  color: white;
-  cursor: none;
-}
+  <style>
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      background: black;
+      overflow: hidden;
+      font-family: system-ui, sans-serif;
+      cursor: none;
+    }
 
-#viewer {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
-}
+    #viewer {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;      /* vertical centering */
+      justify-content: center;  /* horizontal centering */
+    }
 
-/* ===== CENTERED COLUMN ===== */
-#content {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  justify-content: center; /* horizontal centering */
-  align-items: center;     /* vertical centering */
-}
+    /* IMAGE: 80% OF SCREEN */
+    #image {
+      max-height: 80vh;   /* key rule */
+      max-width: 80vw;
+      object-fit: contain;
+      display: block;
+    }
 
-/* This column defines the image width */
-#column {
-  width: 80vw;
-  max-width: 80vw;
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
+    /* UI elements (hidden by default) */
+    .ui {
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
 
-/* ===== IMAGE AREA (80%) ===== */
-#image-area {
-  height: 80vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+    .ui.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
 
-#image {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  display: block;
-}
+    .nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
+      border: none;
+      font-size: 2.5rem;
+      padding: 0.75rem 1.25rem;
+      cursor: pointer;
+      user-select: none;
+    }
 
-/* ===== CAPTION AREA (20%) ===== */
-#caption-area {
-  height: 20vh;
-  display: flex;
-  align-items: center;   /* vertical centering */
-  text-align: left;
-  font-size: 1rem;
-  line-height: 1.4;
-  opacity: 0.9;
-}
+    #prev { left: 10px; }
+    #next { right: 10px; }
 
-/* ===== UI ===== */
-.ui {
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-}
+    #counter {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      color: white;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
 
-.ui.visible {
-  opacity: 1;
-  pointer-events: auto;
-}
+    #fullscreen {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="viewer">
+    <button id="prev" class="nav ui">❮</button>
+    <img id="image" alt="Image Viewer">
+    <button id="next" class="nav ui">❯</button>
 
-.nav {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(0,0,0,0.6);
-  color: white;
-  border: none;
-  font-size: 2.5rem;
-  padding: 0.75rem 1.25rem;
+    <div id="counter" class="ui"></div>
+    <button id="fullscreen" class="ui">Fullscreen (F)</button>
+  </div>
+
+  <script>
+    // ===== CONFIG =====
+    const IMAGE_COUNT = 74;
+    const IMAGE_PATH = "";
+    const IMAGE_PREFIX = "IMG_";
+    const IMAGE_EXT = ".jpg";
+    const PAD_LENGTH = 4;
+    const UI_HIDE_DELAY = 2000;
+    // ==================
+
+    const images = [];
+    for (let i = 1; i <= IMAGE_COUNT; i++) {
+      const num = String(i).padStart(PAD_LENGTH, "0");
+      images.push(`${IMAGE_PATH}${IMAGE_PREFIX}${num}${IMAGE_EXT}`);
+    }
+
+    let index = 0;
+    let uiTimeout;
+
+    const img = document.getElementById("image");
+    const counter = document.getElementById("counter");
+    const viewer = document.getElementById("viewer");
+    const uiElements = document.querySelectorAll(".ui");
+
+    function showImage(i) {
+      if (i < 0) i = images.length - 1;
+      if (i >= images.length) i = 0;
+
+      index = i;
+      img.src = images[index];
+      counter.textContent = `${index + 1} / ${images.length}`;
+    }
+
+    function showUI() {
+      uiElements.forEach(el => el.classList.add("visible"));
+      document.body.style.cursor = "default";
+
+      clearTimeout(uiTimeout);
+      uiTimeout = setTimeout(hideUI, UI_HIDE_DELAY);
+    }
+
+    function hideUI() {
+      uiElements.forEach(el => el.classList.remove("visible"));
+      document.body.style.cursor = "none";
+    }
+
+    document.getElementById("prev").onclick = () => showImage(index - 1);
+    document.getElementById("next").onclick = () => showImage(index + 1);
+
+    document.addEventListener("keydown", e => {
+      showUI();
+      if (e.key === "ArrowLeft") showImage(index - 1);
+      if (e.key === "ArrowRight") showImage(index + 1);
+      if (e.key.toLowerCase() === "f") toggleFullscreen();
+    });
+
+    document.addEventListener("mousemove", showUI);
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        viewer.requestFullscreen();
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    document.getElementById("fullscreen").onclick = toggleFullscreen;
+
+    showImage(index);
+    hideUI();
+  </script>
+</body>
+</html>  padding: 0.75rem 1.25rem;
   cursor: pointer;
 }
 
