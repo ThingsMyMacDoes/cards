@@ -16,21 +16,20 @@ html, body {
   cursor: none;
 }
 
-/* ===== MAIN GRID ===== */
+/* ===== GRID LAYOUT ===== */
 #viewer {
   width: 100vw;
   height: 100vh;
   display: grid;
-  grid-template-rows: 1fr 80vh auto;
+  grid-template-rows: 10vh 80vh 10vh;
   position: relative;
 }
 
-/* ===== IMAGE ROW (ISOLATED) ===== */
+/* ===== IMAGE ROW ===== */
 #image-row {
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
 }
 
 #image {
@@ -41,12 +40,17 @@ html, body {
 
 /* ===== CAPTION ROW ===== */
 #caption-row {
-  max-height: 20vh;
-  overflow-y: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#caption {
   color: white;
-  padding: 12px;
   font-size: 0.95rem;
   opacity: 0.9;
+  text-align: left;
+  white-space: pre-wrap;
 }
 
 /* ===== UI ===== */
@@ -78,7 +82,7 @@ html, body {
 
 #counter {
   position: absolute;
-  bottom: 22vh;
+  bottom: 12vh;
   right: 12px;
   background: rgba(0,0,0,0.6);
   padding: 6px 10px;
@@ -89,7 +93,7 @@ html, body {
 
 #fullscreen {
   position: absolute;
-  bottom: 22vh;
+  bottom: 12vh;
   left: 12px;
   background: rgba(0,0,0,0.6);
   color: white;
@@ -104,420 +108,31 @@ html, body {
 <body>
 
 <div id="viewer">
-  <!-- ROW 1 (empty / future UI) -->
   <div></div>
 
-  <!-- ROW 2 (IMAGE — FIXED) -->
   <div id="image-row">
     <img id="image" alt="Image Viewer">
   </div>
 
-  <!-- ROW 3 (CAPTION) -->
-  <div id="caption-row"></div>
-
-  <button id="prev" class="nav ui">❮</button>
-  <button id="next" class="nav ui">❯</button>
-  <div id="counter" class="ui"></div>
-  <button id="fullscreen" class="ui">Fullscreen (F)</button>
-</div>
-
-<script>
-const IMAGE_COUNT = 74;
-const PREFIX = "IMG_";
-const IMG_EXT = ".jpg";
-const TXT_EXT = ".txt";
-const PAD = 4;
-const UI_HIDE_DELAY = 2000;
-
-const images = [];
-const texts = [];
-
-for (let i = 1; i <= IMAGE_COUNT; i++) {
-  const n = String(i).padStart(PAD, "0");
-  images.push(`${PREFIX}${n}${IMG_EXT}`);
-  texts.push(`${PREFIX}${n}${TXT_EXT}`);
-}
-
-let index = 0;
-let uiTimeout;
-
-const img = document.getElementById("image");
-const caption = document.getElementById("caption-row");
-const counter = document.getElementById("counter");
-const viewer = document.getElementById("viewer");
-const ui = document.querySelectorAll(".ui");
-
-async function loadText(path) {
-  try {
-    const r = await fetch(path);
-    if (!r.ok) throw "";
-    return await r.text();
-  } catch {
-    return "";
-  }
-}
-
-async function showImage(i) {
-  if (i < 0) i = images.length - 1;
-  if (i >= images.length) i = 0;
-
-  index = i;
-  img.src = images[index];
-  counter.textContent = `${index + 1} / ${images.length}`;
-  caption.textContent = await loadText(texts[index]);
-}
-
-function showUI() {
-  ui.forEach(e => e.classList.add("visible"));
-  document.body.style.cursor = "default";
-  clearTimeout(uiTimeout);
-  uiTimeout = setTimeout(hideUI, UI_HIDE_DELAY);
-}
-
-function hideUI() {
-  ui.forEach(e => e.classList.remove("visible"));
-  document.body.style.cursor = "none";
-}
-
-document.getElementById("prev").onclick = () => showImage(index - 1);
-document.getElementById("next").onclick = () => showImage(index + 1);
-
-document.addEventListener("mousemove", showUI);
-document.addEventListener("keydown", e => {
-  showUI();
-  if (e.key === "ArrowLeft") showImage(index - 1);
-  if (e.key === "ArrowRight") showImage(index + 1);
-  if (e.key.toLowerCase() === "f") toggleFullscreen();
-});
-
-function toggleFullscreen() {
-  if (!document.fullscreenElement) viewer.requestFullscreen();
-  else document.exitFullscreen();
-}
-
-document.getElementById("fullscreen").onclick = toggleFullscreen;
-
-showImage(index);
-hideUI();
-</script>
-
-</body>
-</html>
-    #counter {
-      position: absolute;
-      bottom: 12px;
-      right: 12px;
-      color: white;
-      background: rgba(0, 0, 0, 0.6);
-      padding: 6px 10px;
-      border-radius: 4px;
-      font-size: 0.9rem;
-    }
-
-    #fullscreen {
-      position: absolute;
-      bottom: 12px;
-      left: 12px;
-      background: rgba(0, 0, 0, 0.6);
-      color: white;
-      border: none;
-      padding: 6px 10px;
-      font-size: 0.9rem;
-      cursor: pointer;
-    }
-  </style>
-</head>
-<body>
-  <div id="viewer">
-    <button id="prev" class="nav ui">❮</button>
-    <img id="image" alt="Image Viewer">
-    <button id="next" class="nav ui">❯</button>
-
-    <div id="counter" class="ui"></div>
-    <button id="fullscreen" class="ui">Fullscreen (F)</button>
-  </div>
-
-  <script>
-    // ===== CONFIG =====
-    const IMAGE_COUNT = 74;
-    const IMAGE_PATH = "";
-    const IMAGE_PREFIX = "IMG_";
-    const IMAGE_EXT = ".jpg";
-    const PAD_LENGTH = 4;
-    const UI_HIDE_DELAY = 2000;
-    // ==================
-
-    const images = [];
-    for (let i = 1; i <= IMAGE_COUNT; i++) {
-      const num = String(i).padStart(PAD_LENGTH, "0");
-      images.push(`${IMAGE_PATH}${IMAGE_PREFIX}${num}${IMAGE_EXT}`);
-    }
-
-    let index = 0;
-    let uiTimeout;
-
-    const img = document.getElementById("image");
-    const counter = document.getElementById("counter");
-    const viewer = document.getElementById("viewer");
-    const uiElements = document.querySelectorAll(".ui");
-
-    function showImage(i) {
-      if (i < 0) i = images.length - 1;
-      if (i >= images.length) i = 0;
-
-      index = i;
-      img.src = images[index];
-      counter.textContent = `${index + 1} / ${images.length}`;
-    }
-
-    function showUI() {
-      uiElements.forEach(el => el.classList.add("visible"));
-      document.body.style.cursor = "default";
-
-      clearTimeout(uiTimeout);
-      uiTimeout = setTimeout(hideUI, UI_HIDE_DELAY);
-    }
-
-    function hideUI() {
-      uiElements.forEach(el => el.classList.remove("visible"));
-      document.body.style.cursor = "none";
-    }
-
-    document.getElementById("prev").onclick = () => showImage(index - 1);
-    document.getElementById("next").onclick = () => showImage(index + 1);
-
-    document.addEventListener("keydown", e => {
-      showUI();
-      if (e.key === "ArrowLeft") showImage(index - 1);
-      if (e.key === "ArrowRight") showImage(index + 1);
-      if (e.key.toLowerCase() === "f") toggleFullscreen();
-    });
-
-    document.addEventListener("mousemove", showUI);
-
-    function toggleFullscreen() {
-      if (!document.fullscreenElement) {
-        viewer.requestFullscreen();
-      } else {
-        document.exitFullscreen();
-      }
-    }
-
-    document.getElementById("fullscreen").onclick = toggleFullscreen;
-
-    showImage(index);
-    hideUI();
-  </script>
-</body>
-</html>  padding: 0.75rem 1.25rem;
-  cursor: pointer;
-}
-
-#prev { left: 10px; }
-#next { right: 10px; }
-
-#counter {
-  position: absolute;
-  bottom: 12px;
-  right: 12px;
-  background: rgba(0,0,0,0.6);
-  padding: 6px 10px;
-  border-radius: 4px;
-  font-size: 0.9rem;
-}
-
-#fullscreen {
-  position: absolute;
-  bottom: 12px;
-  left: 12px;
-  background: rgba(0,0,0,0.6);
-  color: white;
-  border: none;
-  padding: 6px 10px;
-  font-size: 0.9rem;
-  cursor: pointer;
-}
-</style>
-</head>
-
-<body>
-
-<div id="viewer">
-  <button id="prev" class="nav ui">❮</button>
-
-  <div id="content">
-    <div id="column">
-      <div id="image-area">
-        <img id="image" alt="Image Viewer">
-      </div>
-      <div id="caption-area" id="caption"></div>
-    </div>
-  </div>
-
-  <button id="next" class="nav ui">❯</button>
-  <div id="counter" class="ui"></div>
-  <button id="fullscreen" class="ui">Fullscreen (F)</button>
-</div>
-
-<script>
-const IMAGE_COUNT = 74;
-const PREFIX = "IMG_";
-const IMG_EXT = ".jpg";
-const TXT_EXT = ".txt";
-const PAD = 4;
-const UI_HIDE_DELAY = 2000;
-
-const images = [];
-const texts = [];
-
-for (let i = 1; i <= IMAGE_COUNT; i++) {
-  const n = String(i).padStart(PAD, "0");
-  images.push(`${PREFIX}${n}${IMG_EXT}`);
-  texts.push(`${PREFIX}${n}${TXT_EXT}`);
-}
-
-let index = 0;
-let uiTimeout;
-
-const img = document.getElementById("image");
-const caption = document.getElementById("caption-area");
-const counter = document.getElementById("counter");
-const ui = document.querySelectorAll(".ui");
-
-async function loadText(path) {
-  try {
-    const r = await fetch(path);
-    if (!r.ok) throw "";
-    return await r.text();
-  } catch {
-    return "";
-  }
-}
-
-async function showImage(i) {
-  if (i < 0) i = images.length - 1;
-  if (i >= images.length) i = 0;
-
-  index = i;
-  img.src = images[index];
-  counter.textContent = `${index + 1} / ${images.length}`;
-  caption.textContent = await loadText(texts[index]);
-}
-
-function showUI() {
-  ui.forEach(e => e.classList.add("visible"));
-  document.body.style.cursor = "default";
-  clearTimeout(uiTimeout);
-  uiTimeout = setTimeout(hideUI, UI_HIDE_DELAY);
-}
-
-function hideUI() {
-  ui.forEach(e => e.classList.remove("visible"));
-  document.body.style.cursor = "none";
-}
-
-document.getElementById("prev").onclick = () => showImage(index - 1);
-document.getElementById("next").onclick = () => showImage(index + 1);
-
-document.addEventListener("mousemove", showUI);
-document.addEventListener("keydown", e => {
-  showUI();
-  if (e.key === "ArrowLeft") showImage(index - 1);
-  if (e.key === "ArrowRight") showImage(index + 1);
-  if (e.key.toLowerCase() === "f") toggleFullscreen();
-});
-
-function toggleFullscreen() {
-  if (!document.fullscreenElement) viewer.requestFullscreen();
-  else document.exitFullscreen();
-}
-
-document.getElementById("fullscreen").onclick = toggleFullscreen;
-
-showImage(index);
-hideUI();
-</script>
-
-</body>
-</html>  opacity: 0.9;
-}
-
-/* ===== UI ===== */
-.ui {
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-}
-
-.ui.visible {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.nav {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(0,0,0,0.6);
-  color: white;
-  border: none;
-  font-size: 2.5rem;
-  padding: 0.75rem 1.25rem;
-  cursor: pointer;
-}
-
-#prev { left: 10px; }
-#next { right: 10px; }
-
-#counter {
-  position: absolute;
-  bottom: 22vh;
-  right: 12px;
-  background: rgba(0,0,0,0.6);
-  padding: 6px 10px;
-  border-radius: 4px;
-  font-size: 0.9rem;
-}
-
-#fullscreen {
-  position: absolute;
-  bottom: 22vh;
-  left: 12px;
-  background: rgba(0,0,0,0.6);
-  color: white;
-  border: none;
-  padding: 6px 10px;
-  font-size: 0.9rem;
-  cursor: pointer;
-}
-</style>
-</head>
-
-<body>
-
-<div id="viewer">
-  <button id="prev" class="nav ui">❮</button>
-
-  <div id="image-wrapper">
-    <img id="image" alt="Image Viewer">
-  </div>
-
-  <div id="caption-wrapper">
+  <div id="caption-row">
     <div id="caption"></div>
   </div>
 
+  <button id="prev" class="nav ui">❮</button>
   <button id="next" class="nav ui">❯</button>
   <div id="counter" class="ui"></div>
   <button id="fullscreen" class="ui">Fullscreen (F)</button>
 </div>
 
 <script>
+/* ===== CONFIG ===== */
 const IMAGE_COUNT = 74;
 const PREFIX = "IMG_";
 const IMG_EXT = ".jpg";
 const TXT_EXT = ".txt";
 const PAD = 4;
 const UI_HIDE_DELAY = 2000;
+/* ================== */
 
 const images = [];
 const texts = [];
@@ -547,12 +162,19 @@ async function loadText(path) {
   }
 }
 
+function syncCaptionWidth() {
+  const rect = img.getBoundingClientRect();
+  caption.style.width = rect.width + "px";
+}
+
 async function showImage(i) {
   if (i < 0) i = images.length - 1;
   if (i >= images.length) i = 0;
 
   index = i;
+  img.onload = syncCaptionWidth;
   img.src = images[index];
+
   counter.textContent = `${index + 1} / ${images.length}`;
   caption.textContent = await loadText(texts[index]);
 }
@@ -586,6 +208,8 @@ function toggleFullscreen() {
 }
 
 document.getElementById("fullscreen").onclick = toggleFullscreen;
+
+window.addEventListener("resize", syncCaptionWidth);
 
 showImage(index);
 hideUI();
