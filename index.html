@@ -1,219 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>Image Viewer</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<style>
-html, body {
-  margin: 0;
-  width: 100%;
-  height: 100%;
-  background: black;
-  overflow: hidden;
-  font-family: system-ui, sans-serif;
-  cursor: none;
-}
-
-/* ===== GRID LAYOUT ===== */
-#viewer {
-  width: 100vw;
-  height: 100vh;
-  display: grid;
-  grid-template-rows: 10vh 80vh 10vh;
-  position: relative;
-}
-
-/* ===== IMAGE ROW ===== */
-#image-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-#image {
-  max-width: 80vw;
-  max-height: 100%;
-  object-fit: contain;
-}
-
-/* ===== CAPTION ROW ===== */
-#caption-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-#caption {
-  color: white;
-  font-size: 0.95rem;
-  opacity: 0.9;
-  text-align: left;
-  white-space: pre-wrap;
-}
-
-/* ===== UI ===== */
-.ui {
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  pointer-events: none;
-}
-
-.ui.visible {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.nav {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  background: rgba(0,0,0,0.6);
-  color: white;
-  border: none;
-  font-size: 2.5rem;
-  padding: 0.75rem 1.25rem;
-  cursor: pointer;
-}
-
-#prev { left: 10px; }
-#next { right: 10px; }
-
-#counter {
-  position: absolute;
-  bottom: 12vh;
-  right: 12px;
-  background: rgba(0,0,0,0.6);
-  padding: 6px 10px;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  color: white;
-}
-
-#fullscreen {
-  position: absolute;
-  bottom: 12vh;
-  left: 12px;
-  background: rgba(0,0,0,0.6);
-  color: white;
-  border: none;
-  padding: 6px 10px;
-  font-size: 0.9rem;
-  cursor: pointer;
-}
-</style>
+  <meta charset="UTF-8" />
+  <title>Image Viewer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
 <div id="viewer">
+  <!-- Top row (10%) -->
   <div></div>
 
+  <!-- Middle row (80%) -->
   <div id="image-row">
     <img id="image" alt="Image Viewer">
   </div>
 
+  <!-- Bottom row (10%) -->
   <div id="caption-row">
     <div id="caption"></div>
   </div>
 
+  <!-- UI -->
   <button id="prev" class="nav ui">❮</button>
   <button id="next" class="nav ui">❯</button>
   <div id="counter" class="ui"></div>
   <button id="fullscreen" class="ui">Fullscreen (F)</button>
 </div>
 
-<script>
-/* ===== CONFIG ===== */
-const IMAGE_COUNT = 74;
-const PREFIX = "IMG_";
-const IMG_EXT = ".jpg";
-const TXT_EXT = ".txt";
-const PAD = 4;
-const UI_HIDE_DELAY = 2000;
-/* ================== */
-
-const images = [];
-const texts = [];
-
-for (let i = 1; i <= IMAGE_COUNT; i++) {
-  const n = String(i).padStart(PAD, "0");
-  images.push(`${PREFIX}${n}${IMG_EXT}`);
-  texts.push(`${PREFIX}${n}${TXT_EXT}`);
-}
-
-let index = 0;
-let uiTimeout;
-
-const img = document.getElementById("image");
-const caption = document.getElementById("caption");
-const counter = document.getElementById("counter");
-const viewer = document.getElementById("viewer");
-const ui = document.querySelectorAll(".ui");
-
-async function loadText(path) {
-  try {
-    const r = await fetch(path);
-    if (!r.ok) throw "";
-    return await r.text();
-  } catch {
-    return "";
-  }
-}
-
-function syncCaptionWidth() {
-  const rect = img.getBoundingClientRect();
-  caption.style.width = rect.width + "px";
-}
-
-async function showImage(i) {
-  if (i < 0) i = images.length - 1;
-  if (i >= images.length) i = 0;
-
-  index = i;
-  img.onload = syncCaptionWidth;
-  img.src = images[index];
-
-  counter.textContent = `${index + 1} / ${images.length}`;
-  caption.textContent = await loadText(texts[index]);
-}
-
-function showUI() {
-  ui.forEach(e => e.classList.add("visible"));
-  document.body.style.cursor = "default";
-  clearTimeout(uiTimeout);
-  uiTimeout = setTimeout(hideUI, UI_HIDE_DELAY);
-}
-
-function hideUI() {
-  ui.forEach(e => e.classList.remove("visible"));
-  document.body.style.cursor = "none";
-}
-
-document.getElementById("prev").onclick = () => showImage(index - 1);
-document.getElementById("next").onclick = () => showImage(index + 1);
-
-document.addEventListener("mousemove", showUI);
-document.addEventListener("keydown", e => {
-  showUI();
-  if (e.key === "ArrowLeft") showImage(index - 1);
-  if (e.key === "ArrowRight") showImage(index + 1);
-  if (e.key.toLowerCase() === "f") toggleFullscreen();
-});
-
-function toggleFullscreen() {
-  if (!document.fullscreenElement) viewer.requestFullscreen();
-  else document.exitFullscreen();
-}
-
-document.getElementById("fullscreen").onclick = toggleFullscreen;
-
-window.addEventListener("resize", syncCaptionWidth);
-
-showImage(index);
-hideUI();
-</script>
-
+<script src="viewer.js"></script>
 </body>
 </html>
