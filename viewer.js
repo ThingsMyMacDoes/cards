@@ -1,0 +1,87 @@
+/* ===== CONFIG ===== */
+const IMAGE_COUNT = 74;
+const PREFIX = "IMG_";
+const IMG_EXT = ".jpg";
+const TXT_EXT = ".txt";
+const PAD = 4;
+const UI_HIDE_DELAY = 2000;
+/* ================== */
+
+const images = [];
+const texts = [];
+
+for (let i = 1; i <= IMAGE_COUNT; i++) {
+  const n = String(i).padStart(PAD, "0");
+  images.push(`${PREFIX}${n}${IMG_EXT}`);
+  texts.push(`${PREFIX}${n}${TXT_EXT}`);
+}
+
+let index = 0;
+let uiTimeout;
+
+const img = document.getElementById("image");
+const caption = document.getElementById("caption");
+const counter = document.getElementById("counter");
+const viewer = document.getElementById("viewer");
+const ui = document.querySelectorAll(".ui");
+
+async function loadText(path) {
+  try {
+    const r = await fetch(path);
+    if (!r.ok) throw "";
+    return await r.text();
+  } catch {
+    return "";
+  }
+}
+
+function syncCaptionWidth() {
+  const rect = img.getBoundingClientRect();
+  caption.style.width = rect.width + "px";
+}
+
+async function showImage(i) {
+  if (i < 0) i = images.length - 1;
+  if (i >= images.length) i = 0;
+
+  index = i;
+  img.onload = syncCaptionWidth;
+  img.src = images[index];
+
+  counter.textContent = `${index + 1} / ${images.length}`;
+  caption.textContent = await loadText(texts[index]);
+}
+
+function showUI() {
+  ui.forEach(e => e.classList.add("visible"));
+  document.body.style.cursor = "default";
+  clearTimeout(uiTimeout);
+  uiTimeout = setTimeout(hideUI, UI_HIDE_DELAY);
+}
+
+function hideUI() {
+  ui.forEach(e => e.classList.remove("visible"));
+  document.body.style.cursor = "none";
+}
+
+document.getElementById("prev").onclick = () => showImage(index - 1);
+document.getElementById("next").onclick = () => showImage(index + 1);
+
+document.addEventListener("mousemove", showUI);
+document.addEventListener("keydown", e => {
+  showUI();
+  if (e.key === "ArrowLeft") showImage(index - 1);
+  if (e.key === "ArrowRight") showImage(index + 1);
+  if (e.key.toLowerCase() === "f") toggleFullscreen();
+});
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) viewer.requestFullscreen();
+  else document.exitFullscreen();
+}
+
+document.getElementById("fullscreen").onclick = toggleFullscreen;
+window.addEventListener("resize", syncCaptionWidth);
+
+showImage(index);
+hideUI();
