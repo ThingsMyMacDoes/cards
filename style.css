@@ -1,0 +1,96 @@
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  background: black;
+  overflow: hidden;
+  font-family: system-ui, sans-serif;
+  cursor: none;
+}
+
+/* ===== GRID LAYOUT ===== */
+#viewer {
+  width: 100vw;
+  height: 100vh;
+  display: grid;
+  grid-template-rows: 10vh 80vh 10vh;
+  position: relative;
+}
+
+/* ===== IMAGE ROW ===== */
+#image-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#image {
+  max-width: 80vw;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+/* ===== CAPTION ROW ===== */
+#caption-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#caption {
+  color: white;
+  font-size: 0.95rem;
+  opacity: 0.9;
+  text-align: left;
+  white-space: pre-wrap;
+}
+
+/* ===== UI ===== */
+.ui {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.ui.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0,0,0,0.6);
+  color: white;
+  border: none;
+  font-size: 2.5rem;
+  padding: 0.75rem 1.25rem;
+  cursor: pointer;
+}
+
+#prev { left: 10px; }
+#next { right: 10px; }
+
+#counter {
+  position: absolute;
+  bottom: 12vh;
+  right: 12px;
+  background: rgba(0,0,0,0.6);
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  color: white;
+}
+
+#fullscreen {
+  position: absolute;
+  bottom: 12vh;
+  left: 12px;
+  background: rgba(0,0,0,0.6);
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
