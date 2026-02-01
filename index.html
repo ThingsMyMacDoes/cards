@@ -60,7 +60,7 @@ html, body {
   z-index: 1;
 }
 
-/* visible divider */
+/* divider line */
 .slider {
   position: absolute;
   top: 0;
@@ -84,6 +84,22 @@ html, body {
   pointer-events: auto;
 }
 
+/* visible grab handle */
+.slider::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 18px;
+  height: 18px;
+  transform: translate(-50%, -50%);
+  background: black;
+  border: 2px solid white;
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(0,0,0,0.6);
+  pointer-events: none;
+}
+
 /* ===== SINGLE IMAGE ===== */
 #image {
   max-width: 80vw;
@@ -94,7 +110,6 @@ html, body {
 /* ===== CAPTION ROW ===== */
 #caption-row {
   display: flex;
-  align-items: center;
   justify-content: center;
 }
 
@@ -103,6 +118,7 @@ html, body {
   font-size: 0.95rem;
   opacity: 0.9;
   white-space: pre-wrap;
+  text-align: left;
 }
 
 /* ===== UI ===== */
@@ -225,6 +241,11 @@ function clearImageRow() {
   imageRow.innerHTML = "";
 }
 
+function syncCaptionWidth(target) {
+  const rect = target.getBoundingClientRect();
+  caption.style.width = rect.width + "px";
+}
+
 function createBeforeAfter(beforeSrc, afterSrc) {
   const container = document.createElement("div");
   container.className = "before-after";
@@ -246,6 +267,8 @@ function createBeforeAfter(beforeSrc, afterSrc) {
   beforeWrap.appendChild(before);
   container.append(after, beforeWrap, slider);
   imageRow.appendChild(container);
+
+  after.onload = () => syncCaptionWidth(container);
 
   let dragging = false;
 
@@ -285,6 +308,7 @@ async function showImage(i) {
     const img = document.createElement("img");
     img.id = "image";
     img.src = base;
+    img.onload = () => syncCaptionWidth(img);
     imageRow.appendChild(img);
   }
 
