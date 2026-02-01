@@ -38,6 +38,7 @@ html, body {
   max-width: 80vw;
   max-height: 100%;
   overflow: hidden;
+  user-select: none;
 }
 
 .before-after img {
@@ -59,6 +60,7 @@ html, body {
   z-index: 1;
 }
 
+/* divider line */
 .slider {
   position: absolute;
   top: 0;
@@ -66,8 +68,36 @@ html, body {
   left: 50%;
   width: 3px;
   background: white;
-  cursor: ew-resize;
   z-index: 3;
+  pointer-events: none;
+}
+
+/* invisible grab area */
+.slider::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -12px;
+  width: 27px;
+  height: 100%;
+  cursor: ew-resize;
+  pointer-events: auto;
+}
+
+/* visible grab handle */
+.slider::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 18px;
+  height: 18px;
+  transform: translate(-50%, -50%);
+  background: black;
+  border: 2px solid white;
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(0,0,0,0.6);
+  pointer-events: none;
 }
 
 /* ===== SINGLE IMAGE ===== */
@@ -80,8 +110,8 @@ html, body {
 /* ===== CAPTION ROW ===== */
 #caption-row {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  align-items: center;      /* vertical centering */
+  justify-content: center;  /* center caption block */
 }
 
 #caption {
@@ -89,6 +119,7 @@ html, body {
   font-size: 0.95rem;
   opacity: 0.9;
   white-space: pre-wrap;
+  text-align: left;         /* left-aligned text */
 }
 
 /* ===== UI ===== */
@@ -148,9 +179,7 @@ html, body {
 <div id="viewer">
   <div></div>
 
-  <div id="image-row">
-    <img id="image" alt="Image Viewer">
-  </div>
+  <div id="image-row"></div>
 
   <div id="caption-row">
     <div id="caption"></div>
@@ -185,7 +214,6 @@ let index = 0;
 let uiTimeout;
 
 const imageRow = document.getElementById("image-row");
-const singleImg = document.getElementById("image");
 const caption = document.getElementById("caption");
 const counter = document.getElementById("counter");
 const viewer = document.getElementById("viewer");
@@ -214,6 +242,18 @@ function clearImageRow() {
   imageRow.innerHTML = "";
 }
 
+function syncCaptionWidth(target) {
+  const rect = target.getBoundingClientRect();
+  caption.style.width = rect.width + "px";
+}
+
+function getActiveImageTarget() {
+  return (
+    document.querySelector(".before-after") ||
+    document.getElementById("image")
+  );
+}
+
 function createBeforeAfter(beforeSrc, afterSrc) {
   const container = document.createElement("div");
   container.className = "before-after";
@@ -236,19 +276,28 @@ function createBeforeAfter(beforeSrc, afterSrc) {
   container.append(after, beforeWrap, slider);
   imageRow.appendChild(container);
 
+  after.onload = () => syncCaptionWidth(container);
+
   let dragging = false;
 
-  slider.onmousedown = () => dragging = true;
-  window.onmouseup = () => dragging = false;
-  window.onmousemove = e => {
+  slider.addEventListener("mousedown", e => {
+    dragging = true;
+    e.preventDefault();
+  });
+
+  window.addEventListener("mouseup", () => dragging = false);
+
+  window.addEventListener("mousemove", e => {
     if (!dragging) return;
+
     const rect = container.getBoundingClientRect();
     let x = e.clientX - rect.left;
     x = Math.max(0, Math.min(x, rect.width));
+
     const percent = (x / rect.width) * 100;
     beforeWrap.style.width = percent + "%";
     slider.style.left = percent + "%";
-  };
+  });
 }
 
 async function showImage(i) {
@@ -267,6 +316,7 @@ async function showImage(i) {
     const img = document.createElement("img");
     img.id = "image";
     img.src = base;
+    img.onload = () => syncCaptionWidth(img);
     imageRow.appendChild(img);
   }
 
@@ -303,6 +353,17 @@ function toggleFullscreen() {
 }
 
 document.getElementById("fullscreen").onclick = toggleFullscreen;
+
+/* === keep caption aligned in fullscreen & resize === */
+document.addEventListener("fullscreenchange", () => {
+  const target = getActiveImageTarget();
+  if (target) syncCaptionWidth(target);
+});
+
+window.addEventListener("resize", () => {
+  const target = getActiveImageTarget();
+  if (target) syncCaptionWidth(target);
+});
 
 showImage(index);
 hideUI();
