@@ -32,6 +32,45 @@ html, body {
   justify-content: center;
 }
 
+/* ===== BEFORE / AFTER ===== */
+.before-after {
+  position: relative;
+  max-width: 80vw;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.before-after img {
+  display: block;
+  max-height: 80vh;
+  width: auto;
+}
+
+.before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  overflow: hidden;
+}
+
+.after {
+  position: relative;
+  z-index: 1;
+}
+
+.slider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 3px;
+  background: white;
+  cursor: ew-resize;
+  z-index: 3;
+}
+
+/* ===== SINGLE IMAGE ===== */
 #image {
   max-width: 80vw;
   max-height: 100%;
@@ -49,7 +88,6 @@ html, body {
   color: white;
   font-size: 0.95rem;
   opacity: 0.9;
-  text-align: left;
   white-space: pre-wrap;
 }
 
@@ -146,7 +184,8 @@ for (let i = 1; i <= IMAGE_COUNT; i++) {
 let index = 0;
 let uiTimeout;
 
-const img = document.getElementById("image");
+const imageRow = document.getElementById("image-row");
+const singleImg = document.getElementById("image");
 const caption = document.getElementById("caption");
 const counter = document.getElementById("counter");
 const viewer = document.getElementById("viewer");
@@ -162,18 +201,74 @@ async function loadText(path) {
   }
 }
 
-function syncCaptionWidth() {
-  const rect = img.getBoundingClientRect();
-  caption.style.width = rect.width + "px";
+async function imageExists(path) {
+  try {
+    const r = await fetch(path, { method: "HEAD" });
+    return r.ok;
+  } catch {
+    return false;
+  }
+}
+
+function clearImageRow() {
+  imageRow.innerHTML = "";
+}
+
+function createBeforeAfter(beforeSrc, afterSrc) {
+  const container = document.createElement("div");
+  container.className = "before-after";
+
+  const after = document.createElement("img");
+  after.src = afterSrc;
+  after.className = "after";
+
+  const beforeWrap = document.createElement("div");
+  beforeWrap.className = "before";
+  beforeWrap.style.width = "50%";
+
+  const before = document.createElement("img");
+  before.src = beforeSrc;
+
+  const slider = document.createElement("div");
+  slider.className = "slider";
+
+  beforeWrap.appendChild(before);
+  container.append(after, beforeWrap, slider);
+  imageRow.appendChild(container);
+
+  let dragging = false;
+
+  slider.onmousedown = () => dragging = true;
+  window.onmouseup = () => dragging = false;
+  window.onmousemove = e => {
+    if (!dragging) return;
+    const rect = container.getBoundingClientRect();
+    let x = e.clientX - rect.left;
+    x = Math.max(0, Math.min(x, rect.width));
+    const percent = (x / rect.width) * 100;
+    beforeWrap.style.width = percent + "%";
+    slider.style.left = percent + "%";
+  };
 }
 
 async function showImage(i) {
   if (i < 0) i = images.length - 1;
   if (i >= images.length) i = 0;
-
   index = i;
-  img.onload = syncCaptionWidth;
-  img.src = images[index];
+
+  const base = images[index];
+  const alt = base.replace(".jpg", "A.jpg");
+
+  clearImageRow();
+
+  if (await imageExists(alt)) {
+    createBeforeAfter(base, alt);
+  } else {
+    const img = document.createElement("img");
+    img.id = "image";
+    img.src = base;
+    imageRow.appendChild(img);
+  }
 
   counter.textContent = `${index + 1} / ${images.length}`;
   caption.textContent = await loadText(texts[index]);
@@ -208,8 +303,6 @@ function toggleFullscreen() {
 }
 
 document.getElementById("fullscreen").onclick = toggleFullscreen;
-
-window.addEventListener("resize", syncCaptionWidth);
 
 showImage(index);
 hideUI();
